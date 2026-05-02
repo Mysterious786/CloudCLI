@@ -6,7 +6,7 @@
 set -e
 
 # ── Config ────────────────────────────────────────────────────────────────────
-REPO="saqlainansari/cloudcli"
+REPO="Mysterious786/cloudcli"
 INSTALL_DIR="/usr/local/bin"
 JAR_DIR="$HOME/.cloudcli"
 JAR_NAME="cloudcli.jar"

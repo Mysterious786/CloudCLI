@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const REPO = 'saqlainansari/cloudcli';
+const REPO = 'Mysterious786/cloudcli';
 const JAR_NAME = 'cloudcli.jar';
 const INSTALL_DIR = path.join(os.homedir(), '.cloudcli');
 const JAR_PATH = path.join(INSTALL_DIR, JAR_NAME);

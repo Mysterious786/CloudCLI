@@ -1,7 +1,7 @@
 class Cloudcli < Formula
   desc "Multi-Database Backup CLI Tool - Backup to the cloud with one command"
-  homepage "https://github.com/saqlainansari/cloudcli"
-  url "https://github.com/saqlainansari/cloudcli/releases/latest/download/cloudcli.jar"
+  homepage "https://github.com/Mysterious786/cloudcli"
+  url "https://github.com/Mysterious786/cloudcli/releases/latest/download/cloudcli.jar"
   version "1.0.0"
   license "MIT"
 

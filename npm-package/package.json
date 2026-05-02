@@ -21,13 +21,13 @@
     "url": "https://www.linkedin.com/in/saqlain-zarjis-ansari-108b2621b/"
   },
   "license": "MIT",
-  "homepage": "https://github.com/saqlainansari/cloudcli",
+  "homepage": "https://github.com/Mysterious786/cloudcli",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saqlainansari/cloudcli.git"
+    "url": "https://github.com/Mysterious786/cloudcli.git"
   },
   "bugs": {
-    "url": "https://github.com/saqlainansari/cloudcli/issues"
+    "url": "https://github.com/Mysterious786/cloudcli/issues"
   },
   "bin": {
     "cloudcli": "./bin/cloudcli.js"

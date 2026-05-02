@@ -2,7 +2,7 @@
 
 > A powerful, easy-to-use CLI tool for backing up databases to the cloud.
 
-[![Release](https://img.shields.io/github/v/release/saqlainansari/cloudcli)](https://github.com/saqlainansari/cloudcli/releases)
+[![Release](https://img.shields.io/github/v/release/Mysterious786/cloudcli)](https://github.com/Mysterious786/cloudcli/releases)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange)](https://adoptium.net)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -12,11 +12,16 @@
 
 ### macOS / Linux
 ```bash
-curl -fsSL https://raw.githubusercontent.com/saqlainansari/cloudcli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mysterious786/cloudcli/main/install.sh | bash
+```
+
+### npm
+```bash
+npm install -g cloudcli
 ```
 
 ### Manual (All Platforms)
-1. Download `cloudcli.jar` from [Releases](https://github.com/saqlainansari/cloudcli/releases/latest)
+1. Download `cloudcli.jar` from [Releases](https://github.com/Mysterious786/cloudcli/releases/latest)
 2. Run:
 ```bash
 java -jar cloudcli.jar
