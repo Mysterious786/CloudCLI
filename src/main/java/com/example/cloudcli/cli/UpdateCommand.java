@@ -26,7 +26,7 @@ public class UpdateCommand implements Callable<Integer> {
     private static final String REPO        = "Mysterious786/CloudCLI";
     private static final String API_URL     = "https://api.github.com/repos/" + REPO + "/releases/latest";
     private static final String JAR_PATH    = System.getProperty("user.home") + "/.cloudcli/cloudcli.jar";
-    private static final String CURRENT_VER = "1.0.2";
+    private static final String CURRENT_VER = "1.0.5";
 
     @Override
     public Integer call() {
@@ -66,8 +66,24 @@ public class UpdateCommand implements Callable<Integer> {
                 Files.copy(jarPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // Download new JAR with progress
-            downloadWithProgress(downloadUrl, JAR_PATH);
+            // Download new JAR to temp file first
+            Path tempPath = Paths.get(JAR_PATH + ".tmp");
+            downloadWithProgress(downloadUrl, tempPath.toString());
+
+            // Verify downloaded file is valid (must be > 10MB)
+            long downloadedSize = Files.size(tempPath);
+            if (downloadedSize < 10 * 1024 * 1024) {
+                Files.deleteIfExists(tempPath);
+                // Restore backup
+                if (Files.exists(backupPath)) {
+                    Files.copy(backupPath, jarPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+                System.out.println("\n  ❌ Downloaded file is too small (" + downloadedSize + " bytes). Aborting.");
+                return 1;
+            }
+
+            // Replace old JAR with new one
+            Files.move(tempPath, jarPath, StandardCopyOption.REPLACE_EXISTING);
 
             // Remove backup
             Files.deleteIfExists(backupPath);

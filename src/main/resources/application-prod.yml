@@ -7,10 +7,10 @@ spring:
   
   # PostgreSQL/Supabase Database Configuration
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cloudcli}
+    url: ${DATABASE_URL:jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres?sslmode=require}
     driver-class-name: org.postgresql.Driver
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:}
+    username: ${DATABASE_USERNAME:postgres.ebcdeapfiyqfafceukro}
+    password: ${DATABASE_PASSWORD:8442883695S@qlain}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
