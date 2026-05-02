@@ -29,6 +29,7 @@ import picocli.CommandLine.Command;
         DownloadCommand.class,
         ConnectionTestCommand.class,
         ScheduleCommand.class,
+        UpdateCommand.class,
         AuthCommand.RegisterCommand.class,
         AuthCommand.LoginCommand.class,
         AuthCommand.LogoutCommand.class,
