@@ -45,9 +45,9 @@ public class CloudCliRunner implements CommandLineRunner, ExitCodeGenerator {
     @Override
     public void run(String... args) throws Exception {
         if (args.length == 0) {
-            // Launch full-screen TUI by default
-            log.info("No arguments provided, launching TUI...");
-            args = new String[]{"tui"};
+            // Launch unified shell by default
+            log.info("No arguments provided, launching unified shell...");
+            args = new String[]{"start"};
         }
         
         CommandLine commandLine = new CommandLine(this, factory);
