@@ -301,7 +301,7 @@ public class InteractiveCommand implements Callable<Integer> {
 
             // Download from storage
             com.example.cloudcli.service.storage.StorageProvider storageProvider =
-                applicationContext.getBean(com.example.cloudcli.service.storage.StorageProvider.class);
+                applicationContext.getBean("storageProvider", com.example.cloudcli.service.storage.StorageProvider.class);
 
             try (java.io.InputStream in = storageProvider.retrieve(selected.getFilePath());
                  java.io.FileOutputStream out = new java.io.FileOutputStream(outputPath.toFile())) {
