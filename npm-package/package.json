@@ -1,6 +1,6 @@
 {
   "name": "@saqlain8442/cloudcli",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Multi-Database Backup CLI Tool - Backup MySQL, PostgreSQL, MongoDB, SQLite & Supabase to the cloud",
   "keywords": [
     "backup",

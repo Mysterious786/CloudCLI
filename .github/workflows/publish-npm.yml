@@ -1,8 +1,9 @@
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   publish-npm:
@@ -19,7 +20,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           cd npm-package
-          npm version $VERSION --no-git-tag-version
+          npm version $VERSION --no-git-tag-version --allow-same-version
       
       - name: Publish to npm
         run: |

@@ -50,11 +50,10 @@ if (!fs.existsSync(INSTALL_DIR)) {
     fs.mkdirSync(INSTALL_DIR, { recursive: true });
 }
 
-// Skip if JAR already exists
+// Skip if JAR already exists and is up to date
+// Always re-download to get latest version
 if (fs.existsSync(JAR_PATH)) {
-    console.log(`${GREEN}✓${RESET} CloudCLI already installed at ${JAR_PATH}`);
-    console.log(`\n${BOLD}Run: cloudcli${RESET}\n`);
-    process.exit(0);
+    console.log(`  Updating existing installation...`);
 }
 
 // Get latest release URL
