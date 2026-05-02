@@ -5,9 +5,17 @@ on:
     tags:
       - 'v*'  # Triggers on version tags like v1.0.0, v1.2.3
 
+# ── Explicit permissions ──────────────────────────────────────────────────────
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       # ── Checkout code ──────────────────────────────────────────────────────
