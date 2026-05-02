@@ -73,8 +73,9 @@ public class InteractiveCommand implements Callable<Integer> {
             }
             
             while (true) {
-                showMainMenu();
-                String choice = prompt("Enter choice (1-9)");
+                List<String[]> menuItems = buildMenuItems();
+                showMainMenu(menuItems);
+                String choice = prompt("Enter choice (1-" + menuItems.size() + ")");
                 
                 switch (choice.trim()) {
                     case "1" -> performBackup();
@@ -82,15 +83,16 @@ public class InteractiveCommand implements Callable<Integer> {
                     case "3" -> viewBackupHistory();
                     case "4" -> downloadBackup();
                     case "5" -> generateAiDocumentation();
-                    case "6" -> showAccountInfo();
-                    case "7" -> showSettings();
-                    case "8" -> showHelp();
-                    case "9", "q", "quit", "exit" -> {
+                    case "6" -> generateAiReport();
+                    case "7" -> showAccountInfo();
+                    case "8" -> showSettings();
+                    case "9" -> showHelp();
+                    case "10", "q", "quit", "exit" -> {
                         handleLogout();
                         showGoodbye();
                         return 0;
                     }
-                    default -> error("Invalid choice. Please enter 1-9.");
+                    default -> error("Invalid choice. Please enter 1-" + menuItems.size());
                 }
             }
         } finally {
@@ -294,6 +296,79 @@ public class InteractiveCommand implements Callable<Integer> {
         pause();
     }
 
+    private void generateAiReport() {
+        header("AI BACKUP REPORT");
+
+        System.out.println(ansi().fg(CYAN).a("\nGenerating AI-powered analysis of your backup history.").reset());
+        System.out.println(ansi().fg(YELLOW).a("Powered by OpenAI GPT").reset());
+        System.out.println();
+
+        String format = promptDefault("Output format (markdown/txt)", "markdown");
+        String outputDir = promptDefault("Output directory", "./reports");
+
+        System.out.println(ansi().fg(CYAN).a("\n⏳ Analyzing backups and generating report...").reset());
+        System.out.println(ansi().fg(YELLOW).a("This may take 10-20 seconds...").reset());
+
+        try {
+            com.example.cloudcli.service.ai.AiReportService reportService =
+                applicationContext.getBean(com.example.cloudcli.service.ai.AiReportService.class);
+            com.example.cloudcli.service.ai.DocumentExporter docExporter =
+                applicationContext.getBean(com.example.cloudcli.service.ai.DocumentExporter.class);
+            com.example.cloudcli.repository.InMemoryBackupRepository repo =
+                applicationContext.getBean(com.example.cloudcli.repository.InMemoryBackupRepository.class);
+
+            if (!reportService.isConfigured()) {
+                error("OpenAI API key not configured!");
+                System.out.println(ansi().fg(YELLOW).a("  Add OPENAI_API_KEY to ~/.cloudcli/.env").reset());
+                pause();
+                return;
+            }
+
+            String userId = sessionManager.getCurrentUserId();
+            String username = sessionManager.getCurrentUsername();
+            java.util.List<com.example.cloudcli.repository.BackupRecord> backups =
+                repo.findByUserId(userId);
+
+            if (backups.isEmpty()) {
+                error("No backups found! Create some backups first.");
+                pause();
+                return;
+            }
+
+            System.out.print("  Analyzing " + backups.size() + " backup(s)...");
+            String report = reportService.generateReport(backups, username);
+            System.out.println(" done!");
+
+            System.out.print("  Saving report...");
+            String outputPath = docExporter.export(report, username + "_backup_report", format, outputDir);
+            System.out.println(" done!");
+
+            System.out.println();
+            success("Report generated successfully!");
+            System.out.println("  File: " + ansi().fg(CYAN).a(outputPath).reset());
+            System.out.println();
+
+            // Show preview
+            System.out.println(ansi().fg(YELLOW).a("  Preview:").reset());
+            System.out.println(ansi().fg(YELLOW).a("  ─────────────────────────────────────────").reset());
+            String[] lines = report.split("\n");
+            int preview = Math.min(15, lines.length);
+            for (int i = 0; i < preview; i++) {
+                System.out.println("  " + lines[i]);
+            }
+            if (lines.length > preview) {
+                System.out.println(ansi().fg(YELLOW).a("  ... (" + (lines.length - preview) + " more lines in file)").reset());
+            }
+            System.out.println(ansi().fg(YELLOW).a("  ─────────────────────────────────────────").reset());
+
+        } catch (Exception e) {
+            error("Report generation failed: " + e.getMessage());
+            log.error("AI report error", e);
+        }
+
+        pause();
+    }
+
     private void showAccountInfo() {
         header("👤 ACCOUNT INFO");
         
@@ -442,21 +517,23 @@ public class InteractiveCommand implements Callable<Integer> {
         System.out.println();
     }
     
-    private void showMainMenu() {
-        String username = sessionManager.getCurrentUsername();
-
-        // Build menu items dynamically
+    private List<String[]> buildMenuItems() {
         List<String[]> menuItems = new ArrayList<>();
         menuItems.add(new String[]{"1", "Backup Database"});
         menuItems.add(new String[]{"2", "Test Connection"});
         menuItems.add(new String[]{"3", "View Backup History"});
         menuItems.add(new String[]{"4", "Download Backup"});
         menuItems.add(new String[]{"5", "AI Documentation"});
-        menuItems.add(new String[]{"6", "Account Info"});
-        menuItems.add(new String[]{"7", "Settings"});
-        menuItems.add(new String[]{"8", "Help"});
-        menuItems.add(new String[]{"9", "Logout & Exit"});
+        menuItems.add(new String[]{"6", "AI Backup Report"});
+        menuItems.add(new String[]{"7", "Account Info"});
+        menuItems.add(new String[]{"8", "Settings"});
+        menuItems.add(new String[]{"9", "Help"});
+        menuItems.add(new String[]{"10", "Logout & Exit"});
+        return menuItems;
+    }
 
+    private void showMainMenu(List<String[]> menuItems) {
+        String username = sessionManager.getCurrentUsername();
         int total = menuItems.size();
 
         System.out.println(ansi().fg(BLUE).bold().a("\n=============== MAIN MENU ===============").reset());

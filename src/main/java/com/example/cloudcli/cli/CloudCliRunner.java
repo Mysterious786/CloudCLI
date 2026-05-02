@@ -31,6 +31,7 @@ import picocli.CommandLine.Command;
         ScheduleCommand.class,
         UpdateCommand.class,
         DocCommand.class,
+        ReportCommand.class,
         AuthCommand.RegisterCommand.class,
         AuthCommand.LoginCommand.class,
         AuthCommand.LogoutCommand.class,
