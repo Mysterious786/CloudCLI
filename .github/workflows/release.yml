@@ -31,16 +31,20 @@ jobs:
           cache: maven
 
       # ── Build JAR ──────────────────────────────────────────────────────────
+      - name: Inject credentials into application.yml
+        run: |
+          sed -i "s|\${BACKBLAZE_ACCESS_KEY:}|\${BACKBLAZE_ACCESS_KEY:${{ secrets.BACKBLAZE_ACCESS_KEY }}}|g" src/main/resources/application.yml
+          sed -i "s|\${BACKBLAZE_SECRET_KEY:}|\${BACKBLAZE_SECRET_KEY:${{ secrets.BACKBLAZE_SECRET_KEY }}}|g" src/main/resources/application.yml
+          sed -i "s|\${EMAIL_USERNAME:}|\${EMAIL_USERNAME:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
+          sed -i "s|\${EMAIL_PASSWORD:}|\${EMAIL_PASSWORD:${{ secrets.EMAIL_PASSWORD }}}|g" src/main/resources/application.yml
+          sed -i "s|\${EMAIL_FROM:}|\${EMAIL_FROM:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
+          sed -i "s|\${EMAIL_TO:}|\${EMAIL_TO:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
+          sed -i "s|\${DATABASE_URL:jdbc:h2:file:./data/cloudcli;AUTO_SERVER=TRUE}|\${DATABASE_URL:${{ secrets.DATABASE_URL }}}|g" src/main/resources/application.yml
+          sed -i "s|\${DATABASE_USERNAME:sa}|\${DATABASE_USERNAME:${{ secrets.DATABASE_USERNAME }}}|g" src/main/resources/application.yml
+          sed -i "s|\${DATABASE_PASSWORD:}|\${DATABASE_PASSWORD:${{ secrets.DATABASE_PASSWORD }}}|g" src/main/resources/application.yml
+
       - name: Build JAR
         run: ./mvnw clean package -DskipTests
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          BACKBLAZE_ACCESS_KEY: ${{ secrets.BACKBLAZE_ACCESS_KEY }}
-          BACKBLAZE_SECRET_KEY: ${{ secrets.BACKBLAZE_SECRET_KEY }}
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
 
       # ── Rename JAR ─────────────────────────────────────────────────────────
       - name: Rename JAR

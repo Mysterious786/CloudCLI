@@ -57,8 +57,8 @@ backup:
       enabled: ${BACKBLAZE_ENABLED:true}
       bucket: ${BACKBLAZE_BUCKET:cloudcli-backups}
       region: ${BACKBLAZE_REGION:us-east-005}
-      access-key: ${BACKBLAZE_ACCESS_KEY:00534d3290b364a0000000001}
-      secret-key: ${BACKBLAZE_SECRET_KEY:K005ggkdhoOKP+qSE8s/q9AYCRGJ8Ic}
+      access-key: ${BACKBLAZE_ACCESS_KEY:}
+      secret-key: ${BACKBLAZE_SECRET_KEY:}
       endpoint: ${BACKBLAZE_ENDPOINT:https://s3.us-east-005.backblazeb2.com}
     
     # Wasabi (S3-compatible, cheaper than AWS)
@@ -79,10 +79,10 @@ backup:
       enabled: ${EMAIL_ENABLED:true}
       smtp-host: ${EMAIL_SMTP_HOST:smtp.gmail.com}
       smtp-port: ${EMAIL_SMTP_PORT:587}
-      username: ${EMAIL_USERNAME:saqlainzarjisansari@gmail.com}
-      password: ${EMAIL_PASSWORD:bdpvudigvvzdqpmd}
-      from: ${EMAIL_FROM:saqlainzarjisansari@gmail.com}
-      to: ${EMAIL_TO:saqlainzarjisansari@gmail.com}
+      username: ${EMAIL_USERNAME:}
+      password: ${EMAIL_PASSWORD:}
+      from: ${EMAIL_FROM:}
+      to: ${EMAIL_TO:}
       use-tls: ${EMAIL_USE_TLS:true}
       html-enabled: ${EMAIL_HTML_ENABLED:true}
     
