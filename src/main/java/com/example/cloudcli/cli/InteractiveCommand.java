@@ -21,6 +21,7 @@ import picocli.CommandLine.Command;
 
 import java.io.Console;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -73,7 +74,7 @@ public class InteractiveCommand implements Callable<Integer> {
             
             while (true) {
                 showMainMenu();
-                String choice = prompt("Enter choice (1-8)");
+                String choice = prompt("Enter choice (1-9)");
                 
                 switch (choice.trim()) {
                     case "1" -> performBackup();
@@ -443,19 +444,37 @@ public class InteractiveCommand implements Callable<Integer> {
     
     private void showMainMenu() {
         String username = sessionManager.getCurrentUsername();
-        
+
+        // Build menu items dynamically
+        List<String[]> menuItems = new ArrayList<>();
+        menuItems.add(new String[]{"1", "Backup Database"});
+        menuItems.add(new String[]{"2", "Test Connection"});
+        menuItems.add(new String[]{"3", "View Backup History"});
+        menuItems.add(new String[]{"4", "Download Backup"});
+        menuItems.add(new String[]{"5", "AI Documentation"});
+        menuItems.add(new String[]{"6", "Account Info"});
+        menuItems.add(new String[]{"7", "Settings"});
+        menuItems.add(new String[]{"8", "Help"});
+        menuItems.add(new String[]{"9", "Logout & Exit"});
+
+        int total = menuItems.size();
+
         System.out.println(ansi().fg(BLUE).bold().a("\n=============== MAIN MENU ===============").reset());
         System.out.println(ansi().fg(CYAN).a("  Logged in as: ").fg(GREEN).bold().a(username).reset());
         System.out.println();
-        System.out.println(ansi().fg(GREEN).a("  1. ").fg(WHITE).a("🗄️  Backup Database").reset());
-        System.out.println(ansi().fg(GREEN).a("  2. ").fg(WHITE).a("🔌 Test Connection").reset());
-        System.out.println(ansi().fg(GREEN).a("  3. ").fg(WHITE).a("📋 View Backup History").reset());
-        System.out.println(ansi().fg(GREEN).a("  4. ").fg(WHITE).a("⬇️  Download Backup").reset());
-        System.out.println(ansi().fg(GREEN).a("  5. ").fg(WHITE).a("🤖 AI Documentation").reset());
-        System.out.println(ansi().fg(GREEN).a("  6. ").fg(WHITE).a("👤 Account Info").reset());
-        System.out.println(ansi().fg(GREEN).a("  7. ").fg(WHITE).a("⚙️  Settings").reset());
-        System.out.println(ansi().fg(GREEN).a("  8. ").fg(WHITE).a("❓ Help").reset());
-        System.out.println(ansi().fg(RED).a("  9. ").fg(WHITE).a("🚪 Logout & Exit").reset());
+
+        for (String[] item : menuItems) {
+            String num = item[0];
+            String label = item[1];
+            boolean isLast = num.equals(String.valueOf(total));
+
+            if (isLast) {
+                System.out.println(ansi().fg(RED).a("  [" + num + "] ").fg(WHITE).a(label).reset());
+            } else {
+                System.out.println(ansi().fg(GREEN).a("  [" + num + "] ").fg(WHITE).a(label).reset());
+            }
+        }
+
         System.out.println();
         System.out.println(ansi().fg(BLUE).bold().a("=========================================").reset());
     }
