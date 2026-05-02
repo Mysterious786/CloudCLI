@@ -75,16 +75,16 @@ backup:
   # Notification Configuration
   notification:
     enabled: true
-    providers: console,email  # Email notifications enabled!
+    providers: console,email
     
     email:
-      enabled: ${EMAIL_ENABLED:false}
+      enabled: ${EMAIL_ENABLED:true}
       smtp-host: ${EMAIL_SMTP_HOST:smtp.gmail.com}
       smtp-port: ${EMAIL_SMTP_PORT:587}
-      username: ${EMAIL_USERNAME:}
-      password: ${EMAIL_PASSWORD:}
-      from: ${EMAIL_FROM:}
-      to: ${EMAIL_TO:}
+      username: ${EMAIL_USERNAME:saqlainzarjisansari@gmail.com}
+      password: ${EMAIL_PASSWORD:bdpvudigvvzdqpmd}
+      from: ${EMAIL_FROM:saqlainzarjisansari@gmail.com}
+      to: ${EMAIL_TO:saqlainzarjisansari@gmail.com}
       use-tls: ${EMAIL_USE_TLS:true}
       html-enabled: ${EMAIL_HTML_ENABLED:true}
     
