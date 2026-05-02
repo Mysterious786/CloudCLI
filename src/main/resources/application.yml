@@ -56,7 +56,7 @@ backup:
     
     # Backblaze B2 (S3-compatible, 10GB free)
     backblaze:
-      enabled: true
+      enabled: ${BACKBLAZE_ENABLED:true}
       bucket: ${BACKBLAZE_BUCKET:cloudcli-backups}
       region: ${BACKBLAZE_REGION:us-east-005}
       access-key: ${BACKBLAZE_ACCESS_KEY:}

@@ -30,14 +30,23 @@ public class BackblazeStorageProvider implements StorageProvider {
     private final String bucketName;
     
     public BackblazeStorageProvider(
-        @Value("${backup.storage.backblaze.bucket}") String bucketName,
-        @Value("${backup.storage.backblaze.region}") String region,
-        @Value("${backup.storage.backblaze.access-key}") String accessKey,
-        @Value("${backup.storage.backblaze.secret-key}") String secretKey,
-        @Value("${backup.storage.backblaze.endpoint}") String endpoint
+        @Value("${backup.storage.backblaze.bucket:}") String bucketName,
+        @Value("${backup.storage.backblaze.region:us-east-005}") String region,
+        @Value("${backup.storage.backblaze.access-key:}") String accessKey,
+        @Value("${backup.storage.backblaze.secret-key:}") String secretKey,
+        @Value("${backup.storage.backblaze.endpoint:https://s3.us-east-005.backblazeb2.com}") String endpoint
     ) {
         this.bucketName = bucketName;
-        
+
+        // If credentials are missing, create a placeholder client
+        // The app will still start but storage operations will fail gracefully
+        if (accessKey == null || accessKey.isBlank() || secretKey == null || secretKey.isBlank()) {
+            log.warn("Backblaze B2 credentials not configured. Storage will use local fallback.");
+            log.warn("Set BACKBLAZE_ACCESS_KEY and BACKBLAZE_SECRET_KEY environment variables.");
+            this.s3Client = null;
+            return;
+        }
+
         this.s3Client = S3Client.builder()
             .region(Region.of(region))
             .endpointOverride(URI.create(endpoint))
@@ -45,40 +54,40 @@ public class BackblazeStorageProvider implements StorageProvider {
                 AwsBasicCredentials.create(accessKey, secretKey)
             ))
             .build();
-        
+
         log.info("Initialized Backblaze B2 storage provider for bucket: {}", bucketName);
     }
     
     @Override
     public void store(Path localFile, String destination) throws StorageException {
+        if (s3Client == null) {
+            throw new StorageException("Backblaze B2 not configured. Set BACKBLAZE_ACCESS_KEY and BACKBLAZE_SECRET_KEY environment variables.");
+        }
         try {
             log.info("Uploading to Backblaze B2: {} -> {}", localFile, destination);
-            
             PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(destination)
                 .build();
-            
             s3Client.putObject(request, RequestBody.fromFile(localFile));
             log.info("Successfully uploaded to Backblaze B2: {}", destination);
-            
         } catch (Exception e) {
             throw new StorageException("Failed to upload to Backblaze B2: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public InputStream retrieve(String destination) throws StorageException {
+        if (s3Client == null) {
+            throw new StorageException("Backblaze B2 not configured. Set BACKBLAZE_ACCESS_KEY and BACKBLAZE_SECRET_KEY environment variables.");
+        }
         try {
             log.info("Downloading from Backblaze B2: {}", destination);
-            
             GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(destination)
                 .build();
-            
             return s3Client.getObject(request);
-            
         } catch (Exception e) {
             throw new StorageException("Failed to download from Backblaze B2: " + e.getMessage(), e);
         }
