@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -47,6 +48,7 @@ public class InteractiveCommand implements Callable<Integer> {
     private final SessionManager sessionManager;
     private final UserService userService;
     private final InMemoryBackupRepository backupRepository;
+    private final ApplicationContext applicationContext;
     private final Scanner scanner = new Scanner(System.in);
     
     private static final DateTimeFormatter DATE_FORMATTER = 
@@ -215,34 +217,119 @@ public class InteractiveCommand implements Callable<Integer> {
     
     private void downloadBackup() {
         header("⬇️  DOWNLOAD BACKUP");
-        
+
         if (!sessionManager.isLoggedIn()) {
             error("You must be logged in!");
             pause();
             return;
         }
-        
+
         String userId = sessionManager.getCurrentUserId();
         List<BackupRecord> backups = backupRepository.findByUserId(userId);
-        
+
         if (backups.isEmpty()) {
             info("No backups found. Create a backup first!");
             pause();
             return;
         }
-        
+
+        // Show numbered list with friendly names
         System.out.println(ansi().fg(CYAN).a("\nYour Backups:").reset());
+        System.out.println(ansi().fg(YELLOW).a("─────────────────────────────────────────────────────────").reset());
+        System.out.printf(ansi().fg(CYAN).a("  %-4s %-20s %-12s %-10s %-20s%n").reset().toString(),
+            "#", "DATABASE", "TYPE", "SIZE", "DATE");
+        System.out.println(ansi().fg(YELLOW).a("─────────────────────────────────────────────────────────").reset());
+
         for (int i = 0; i < backups.size(); i++) {
-            BackupRecord backup = backups.get(i);
-            System.out.println(ansi().fg(GREEN).a("  " + (i + 1) + ". ").reset() + 
-                backup.getDatabaseName() + " - " + backup.getBackupType() + 
-                " (" + formatSize(backup.getSizeBytes()) + ")");
+            BackupRecord b = backups.get(i);
+            String date = DATE_FORMATTER.format(b.getTimestamp()).substring(0, 16);
+            System.out.printf("  %-4s %-20s %-12s %-10s %-20s%n",
+                ansi().fg(GREEN).a(String.valueOf(i + 1)).reset(),
+                truncate(b.getDatabaseName(), 20),
+                b.getBackupType(),
+                formatSize(b.getSizeBytes()),
+                date);
         }
-        
-        info("\nTo download, use the command:");
-        System.out.println(ansi().fg(YELLOW).a("  ./cloudcli download --id <backup-id>").reset());
-        
+
+        System.out.println(ansi().fg(YELLOW).a("─────────────────────────────────────────────────────────").reset());
+        System.out.println();
+
+        // Let user pick by number
+        String choice = prompt("Enter number to download (or 0 to cancel)");
+        int idx;
+        try {
+            idx = Integer.parseInt(choice.trim()) - 1;
+        } catch (NumberFormatException e) {
+            error("Invalid choice.");
+            pause();
+            return;
+        }
+
+        if (idx < 0) {
+            info("Download cancelled.");
+            pause();
+            return;
+        }
+
+        if (idx >= backups.size()) {
+            error("Invalid number. Please choose 1-" + backups.size());
+            pause();
+            return;
+        }
+
+        BackupRecord selected = backups.get(idx);
+
+        // Ask for custom name
+        String defaultName = selected.getDatabaseName() + "_" + selected.getBackupType().toLowerCase() + "_backup";
+        String customName = promptDefault("Save as (filename)", defaultName);
+        String outputDir = promptDefault("Save to directory", "./downloads");
+
+        System.out.println(ansi().fg(CYAN).a("\n⏳ Downloading...").reset());
+        System.out.println("  File: " + ansi().fg(YELLOW).a(selected.getFilePath()).reset());
+
+        try {
+            // Ensure output directory exists
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(outputDir));
+
+            // Get file extension from original path
+            String originalPath = selected.getFilePath();
+            String ext = originalPath.contains(".") ?
+                originalPath.substring(originalPath.lastIndexOf('.')) : "";
+
+            String finalFileName = customName.endsWith(ext) ? customName : customName + ext;
+            java.nio.file.Path outputPath = java.nio.file.Paths.get(outputDir, finalFileName);
+
+            // Download from storage
+            com.example.cloudcli.service.storage.StorageProvider storageProvider =
+                applicationContext.getBean(com.example.cloudcli.service.storage.StorageProvider.class);
+
+            try (java.io.InputStream in = storageProvider.retrieve(selected.getFilePath());
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(outputPath.toFile())) {
+
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                long total = 0;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                    total += bytesRead;
+                }
+
+                System.out.println();
+                success("Download completed!");
+                System.out.println("  Name    : " + ansi().fg(CYAN).a(finalFileName).reset());
+                System.out.println("  Size    : " + ansi().fg(CYAN).a(formatSize(total)).reset());
+                System.out.println("  Saved to: " + ansi().fg(CYAN).a(outputPath.toAbsolutePath().toString()).reset());
+            }
+
+        } catch (Exception e) {
+            error("Download failed: " + e.getMessage());
+        }
+
         pause();
+    }
+
+    private String truncate(String s, int max) {
+        return s != null && s.length() > max ? s.substring(0, max - 3) + "..." : s;
     }
     
     private void showWelcome() {
