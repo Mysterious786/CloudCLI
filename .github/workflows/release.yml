@@ -53,6 +53,8 @@ jobs:
           spring.datasource.username=${{ secrets.DATABASE_USERNAME }}
           spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}
           spring.jpa.hibernate.ddl-auto=update
+          openai.api-key=${{ secrets.OPENAI_API_KEY }}
+          openai.model=gpt-4o-mini
           EOF
 
       # ── Build JAR ──────────────────────────────────────────────────────────
