@@ -30,6 +30,7 @@ import picocli.CommandLine.Command;
         ConnectionTestCommand.class,
         ScheduleCommand.class,
         UpdateCommand.class,
+        DocCommand.class,
         AuthCommand.RegisterCommand.class,
         AuthCommand.LoginCommand.class,
         AuthCommand.LogoutCommand.class,

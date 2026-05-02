@@ -80,15 +80,16 @@ public class InteractiveCommand implements Callable<Integer> {
                     case "2" -> testConnection();
                     case "3" -> viewBackupHistory();
                     case "4" -> downloadBackup();
-                    case "5" -> showAccountInfo();
-                    case "6" -> showSettings();
-                    case "7" -> showHelp();
-                    case "8", "q", "quit", "exit" -> {
+                    case "5" -> generateAiDocumentation();
+                    case "6" -> showAccountInfo();
+                    case "7" -> showSettings();
+                    case "8" -> showHelp();
+                    case "9", "q", "quit", "exit" -> {
                         handleLogout();
                         showGoodbye();
                         return 0;
                     }
-                    default -> error("Invalid choice. Please enter 1-8.");
+                    default -> error("Invalid choice. Please enter 1-9.");
                 }
             }
         } finally {
@@ -195,6 +196,103 @@ public class InteractiveCommand implements Callable<Integer> {
         }
     }
     
+    private void generateAiDocumentation() {
+        header("🤖 AI DOCUMENTATION GENERATOR");
+
+        System.out.println(ansi().fg(CYAN).a("\nGenerate AI-powered documentation from your database schema.").reset());
+        System.out.println(ansi().fg(YELLOW).a("Powered by OpenAI GPT").reset());
+        System.out.println();
+
+        // Database type
+        System.out.println(ansi().fg(CYAN).a("Database Type:").reset());
+        System.out.println("  1. MySQL");
+        System.out.println("  2. PostgreSQL");
+        System.out.println("  3. MongoDB");
+        System.out.println("  4. SQLite");
+        System.out.println("  5. Supabase");
+        System.out.println("  0. Cancel");
+
+        String dbChoice = prompt("Select database (1-5)");
+        String dbType = switch (dbChoice.trim()) {
+            case "1" -> "mysql";
+            case "2" -> "postgres";
+            case "3" -> "mongodb";
+            case "4" -> "sqlite";
+            case "5" -> "supabase";
+            case "0" -> { yield null; }
+            default  -> { error("Invalid choice"); yield null; }
+        };
+
+        if (dbType == null) { pause(); return; }
+
+        // Build config
+        com.example.cloudcli.model.DatabaseConfig config = new com.example.cloudcli.model.DatabaseConfig();
+        config.setType(dbType);
+
+        if (dbType.equals("sqlite")) {
+            config.setDatabase(prompt("Database file path"));
+        } else {
+            config.setHost(promptDefault("Host", "localhost"));
+            config.setPort(Integer.parseInt(promptDefault("Port",
+                String.valueOf(dbType.equals("mysql") ? 3306 : dbType.equals("mongodb") ? 27017 : 5432))));
+            config.setDatabase(prompt("Database name"));
+            config.setUsername(prompt("Username"));
+            config.setPassword(promptPassword("Password"));
+        }
+
+        // Output format
+        System.out.println(ansi().fg(CYAN).a("\nOutput Format:").reset());
+        System.out.println("  1. Markdown (recommended)");
+        System.out.println("  2. Plain Text");
+        String fmtChoice = promptDefault("Select format (1-2)", "1");
+        String format = fmtChoice.equals("2") ? "txt" : "markdown";
+
+        String outputDir = promptDefault("Output directory", "./docs");
+
+        System.out.println(ansi().fg(CYAN).a("\n⏳ Generating documentation...").reset());
+        System.out.println(ansi().fg(YELLOW).a("This may take 10-30 seconds...").reset());
+
+        try {
+            // Use DocCommand via application context
+            com.example.cloudcli.service.ai.AiDocumentationService aiService =
+                applicationContext.getBean(com.example.cloudcli.service.ai.AiDocumentationService.class);
+            com.example.cloudcli.service.ai.SchemaExtractorService schemaExtractor =
+                applicationContext.getBean(com.example.cloudcli.service.ai.SchemaExtractorService.class);
+            com.example.cloudcli.service.ai.DocumentExporter docExporter =
+                applicationContext.getBean(com.example.cloudcli.service.ai.DocumentExporter.class);
+
+            if (!aiService.isConfigured()) {
+                error("OpenAI API key not configured!");
+                System.out.println(ansi().fg(YELLOW).a("  Add to ~/.cloudcli/.env:").reset());
+                System.out.println(ansi().fg(YELLOW).a("  OPENAI_API_KEY=your-key-here").reset());
+                pause();
+                return;
+            }
+
+            System.out.print("  Extracting schema...");
+            String schema = schemaExtractor.extractSchema(config);
+            System.out.println(" done!");
+
+            System.out.print("  Calling OpenAI...");
+            String documentation = aiService.generateDocumentation(schema, config, format);
+            System.out.println(" done!");
+
+            System.out.print("  Exporting file...");
+            String outputPath = docExporter.export(documentation, config.getDatabase(), format, outputDir);
+            System.out.println(" done!");
+
+            System.out.println();
+            success("Documentation generated successfully!");
+            System.out.println("  File: " + ansi().fg(CYAN).a(outputPath).reset());
+
+        } catch (Exception e) {
+            error("Documentation generation failed: " + e.getMessage());
+            log.error("AI documentation error", e);
+        }
+
+        pause();
+    }
+
     private void showAccountInfo() {
         header("👤 ACCOUNT INFO");
         
@@ -353,10 +451,11 @@ public class InteractiveCommand implements Callable<Integer> {
         System.out.println(ansi().fg(GREEN).a("  2. ").fg(WHITE).a("🔌 Test Connection").reset());
         System.out.println(ansi().fg(GREEN).a("  3. ").fg(WHITE).a("📋 View Backup History").reset());
         System.out.println(ansi().fg(GREEN).a("  4. ").fg(WHITE).a("⬇️  Download Backup").reset());
-        System.out.println(ansi().fg(GREEN).a("  5. ").fg(WHITE).a("👤 Account Info").reset());
-        System.out.println(ansi().fg(GREEN).a("  6. ").fg(WHITE).a("⚙️  Settings").reset());
-        System.out.println(ansi().fg(GREEN).a("  7. ").fg(WHITE).a("❓ Help").reset());
-        System.out.println(ansi().fg(RED).a("  8. ").fg(WHITE).a("🚪 Logout & Exit").reset());
+        System.out.println(ansi().fg(GREEN).a("  5. ").fg(WHITE).a("🤖 AI Documentation").reset());
+        System.out.println(ansi().fg(GREEN).a("  6. ").fg(WHITE).a("👤 Account Info").reset());
+        System.out.println(ansi().fg(GREEN).a("  7. ").fg(WHITE).a("⚙️  Settings").reset());
+        System.out.println(ansi().fg(GREEN).a("  8. ").fg(WHITE).a("❓ Help").reset());
+        System.out.println(ansi().fg(RED).a("  9. ").fg(WHITE).a("🚪 Logout & Exit").reset());
         System.out.println();
         System.out.println(ansi().fg(BLUE).bold().a("=========================================").reset());
     }

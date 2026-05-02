@@ -183,6 +183,21 @@
 			<version>1.6.2</version>
 		</dependency>
 
+		<!-- ✅ OpenAI - HTTP client for AI documentation generator -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.12.0</version>
+		</dependency>
+
+		<!-- ✅ PDF Generation -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itext7-core</artifactId>
+			<version>7.2.5</version>
+			<type>pom</type>
+		</dependency>
+
 		<!-- ✅ Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
