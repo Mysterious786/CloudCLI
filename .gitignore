@@ -55,6 +55,7 @@ cloudcli-backups/
 
 # Configuration with secrets (keep templates only)
 application-local.yml
+application-production.properties
 # Note: application-prod.yml is tracked as template with placeholders
 
 # Session data

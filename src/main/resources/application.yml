@@ -4,6 +4,8 @@ spring:
   main:
     web-application-type: none  # Disable web server for CLI app
     banner-mode: off
+  profiles:
+    include: production  # Always include production profile if it exists
   
   # Database Configuration - auto-detects H2 or PostgreSQL based on DATABASE_URL
   datasource:

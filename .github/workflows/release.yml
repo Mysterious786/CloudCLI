@@ -30,19 +30,32 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # ── Build JAR ──────────────────────────────────────────────────────────
-      - name: Inject credentials into application.yml
+      # ── Inject credentials ─────────────────────────────────────────────────
+      - name: Create production credentials file
         run: |
-          sed -i "s|\${BACKBLAZE_ACCESS_KEY:}|\${BACKBLAZE_ACCESS_KEY:${{ secrets.BACKBLAZE_ACCESS_KEY }}}|g" src/main/resources/application.yml
-          sed -i "s|\${BACKBLAZE_SECRET_KEY:}|\${BACKBLAZE_SECRET_KEY:${{ secrets.BACKBLAZE_SECRET_KEY }}}|g" src/main/resources/application.yml
-          sed -i "s|\${EMAIL_USERNAME:}|\${EMAIL_USERNAME:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
-          sed -i "s|\${EMAIL_PASSWORD:}|\${EMAIL_PASSWORD:${{ secrets.EMAIL_PASSWORD }}}|g" src/main/resources/application.yml
-          sed -i "s|\${EMAIL_FROM:}|\${EMAIL_FROM:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
-          sed -i "s|\${EMAIL_TO:}|\${EMAIL_TO:${{ secrets.EMAIL_USERNAME }}}|g" src/main/resources/application.yml
-          sed -i "s|\${DATABASE_URL:jdbc:h2:file:./data/cloudcli;AUTO_SERVER=TRUE}|\${DATABASE_URL:${{ secrets.DATABASE_URL }}}|g" src/main/resources/application.yml
-          sed -i "s|\${DATABASE_USERNAME:sa}|\${DATABASE_USERNAME:${{ secrets.DATABASE_USERNAME }}}|g" src/main/resources/application.yml
-          sed -i "s|\${DATABASE_PASSWORD:}|\${DATABASE_PASSWORD:${{ secrets.DATABASE_PASSWORD }}}|g" src/main/resources/application.yml
+          cat > src/main/resources/application-production.properties << EOF
+          backup.storage.backblaze.access-key=${{ secrets.BACKBLAZE_ACCESS_KEY }}
+          backup.storage.backblaze.secret-key=${{ secrets.BACKBLAZE_SECRET_KEY }}
+          backup.storage.backblaze.bucket=cloudcli-backups
+          backup.storage.backblaze.region=us-east-005
+          backup.storage.backblaze.endpoint=https://s3.us-east-005.backblazeb2.com
+          backup.storage.backblaze.enabled=true
+          backup.notification.email.enabled=true
+          backup.notification.email.username=${{ secrets.EMAIL_USERNAME }}
+          backup.notification.email.password=${{ secrets.EMAIL_PASSWORD }}
+          backup.notification.email.from=${{ secrets.EMAIL_USERNAME }}
+          backup.notification.email.to=${{ secrets.EMAIL_USERNAME }}
+          backup.notification.email.smtp-host=smtp.gmail.com
+          backup.notification.email.smtp-port=587
+          backup.notification.email.use-tls=true
+          backup.notification.email.html-enabled=true
+          spring.datasource.url=${{ secrets.DATABASE_URL }}
+          spring.datasource.username=${{ secrets.DATABASE_USERNAME }}
+          spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}
+          spring.jpa.hibernate.ddl-auto=update
+          EOF
 
+      # ── Build JAR ──────────────────────────────────────────────────────────
       - name: Build JAR
         run: ./mvnw clean package -DskipTests
 
