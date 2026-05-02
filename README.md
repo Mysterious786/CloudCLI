@@ -1,34 +1,40 @@
 # ☁️ CloudCLI — Multi-Database Backup Tool
 
-> A powerful, easy-to-use CLI tool for backing up databases to the cloud.
+> A powerful, production-ready CLI tool for backing up databases to the cloud with multi-user authentication, email notifications, and a beautiful interactive interface.
 
-[![Release](https://img.shields.io/github/v/release/Mysterious786/cloudcli)](https://github.com/Mysterious786/cloudcli/releases)
+**Project URL:** https://github.com/Mysterious786/CloudCLI
+
+[![Release](https://img.shields.io/github/v/release/Mysterious786/CloudCLI)](https://github.com/Mysterious786/CloudCLI/releases/latest)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange)](https://adoptium.net)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![npm](https://img.shields.io/badge/npm-%40saqlain8442%2Fcloudcli-red)](https://www.npmjs.com/package/@saqlain8442/cloudcli)
 
 ---
 
 ## ⚡ Quick Install
 
-### macOS / Linux
+### Option 1 — curl (macOS / Linux)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Mysterious786/cloudcli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mysterious786/CloudCLI/main/install.sh | bash
 ```
 
-### npm
+### Option 2 — npm
 ```bash
-npm install -g cloudcli
+npm install -g @saqlain8442/cloudcli
 ```
 
-### Manual (All Platforms)
-1. Download `cloudcli.jar` from [Releases](https://github.com/Mysterious786/cloudcli/releases/latest)
-2. Run:
+### Option 3 — Direct JAR Download
+Download `cloudcli.jar` from [Releases](https://github.com/Mysterious786/CloudCLI/releases/latest) and run:
 ```bash
 java -jar cloudcli.jar
 ```
 
-### Requirements
-- **Java 17+** — [Download here](https://adoptium.net/temurin/releases/?version=17)
+### Option 4 — Self Update (if already installed)
+```bash
+cloudcli update
+```
+
+> **Requirement:** Java 17+ — [Download here](https://adoptium.net/temurin/releases/?version=17)
 
 ---
 
@@ -38,10 +44,11 @@ java -jar cloudcli.jar
 # Launch CloudCLI
 cloudcli
 
-# Register a new account
-# → You'll be auto-logged in and receive a welcome email!
+# First time? Register an account
+# → Auto-logged in after registration
+# → Beautiful welcome email sent automatically
 
-# Or login to existing account
+# Already have an account? Login
 # → Access the full backup dashboard
 ```
 
@@ -50,7 +57,7 @@ cloudcli
 ## 🗄️ Supported Databases
 
 | Database | Backup | Restore | Test Connection |
-|----------|--------|---------|-----------------|
+|----------|:------:|:-------:|:---------------:|
 | MySQL | ✅ | ✅ | ✅ |
 | PostgreSQL | ✅ | ✅ | ✅ |
 | MongoDB | ✅ | ✅ | ✅ |
@@ -61,94 +68,111 @@ cloudcli
 
 ## ☁️ Supported Cloud Storage
 
-| Provider | Free Tier |
-|----------|-----------|
-| Backblaze B2 | 10 GB free |
-| AWS S3 | 5 GB free |
-| Wasabi | Paid |
-| Local | Unlimited |
+| Provider | Free Tier | Notes |
+|----------|-----------|-------|
+| Backblaze B2 | 10 GB free | Default provider |
+| AWS S3 | 5 GB free | S3-compatible |
+| Wasabi | Paid | Cheaper than AWS |
+| Local | Unlimited | For development |
 
 ---
 
-## 📧 Features
+## ✨ Features
 
-- 🔐 **Multi-user authentication** with session persistence
-- 📦 **Backup & restore** any database with one command
-- ☁️ **Cloud storage** — store backups securely in the cloud
-- 📧 **Email notifications** — beautiful HTML emails on backup events
-- 🎉 **Welcome email** — sent automatically on registration
-- 💻 **Interactive shell** — TAB completion, command history
-- 🎨 **Guided wizard** — step-by-step backup creation
-- 📥 **Download backups** — retrieve from cloud anytime
-- 🗜️ **Compression** — gzip compression to save storage
+| Feature | Description |
+|---------|-------------|
+| 🔐 Multi-user Auth | Register, login, session persistence |
+| 📦 Backup & Restore | One-command backup for any database |
+| ☁️ Cloud Storage | Backblaze B2, AWS S3, Wasabi |
+| 📧 Email Notifications | Beautiful HTML emails on backup events |
+| 🎉 Welcome Email | Auto-sent on new user registration |
+| 💻 Command Shell | TAB completion, command history |
+| 🎨 Interactive Wizard | Step-by-step guided backup creation |
+| 📥 Download Backups | Pick from numbered list, custom filename |
+| 🗜️ Compression | gzip compression to save storage |
+| 🔄 Self Update | `cloudcli update` to get latest version |
+| 🗃️ Supabase DB | Production PostgreSQL via Supabase |
 
 ---
 
 ## 📖 Usage
 
 ```bash
-cloudcli                    # Launch unified interface
+cloudcli                    # Launch interactive interface
 cloudcli --help             # Show all commands
-cloudcli backup --help      # Backup command help
-cloudcli register --help    # Register command help
+cloudcli update             # Update to latest version
 ```
 
 ### Direct Commands
 ```bash
-# Register
+# Register a new account
 cloudcli register -e email@example.com -u username -p password
 
 # Login
 cloudcli login -u username -p password
 
-# Backup SQLite
+# Backup SQLite database
 cloudcli backup --type=sqlite --database=mydb.db
 
-# Backup PostgreSQL
+# Backup PostgreSQL database
 cloudcli backup --type=postgres --database=mydb --host=localhost --username=postgres
 
-# List backups
+# Backup with compression
+cloudcli backup --type=sqlite --database=mydb.db --compress
+
+# List all your backups
 cloudcli list
 
-# Download backup
+# Download a backup (interactive)
+cloudcli interactive  # Choose option 4
+
+# Download by ID
 cloudcli download --id <backup-id>
+
+# Test database connection
+cloudcli test --type=postgres --host=localhost --database=mydb --username=postgres
+
+# Logout
+cloudcli logout
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-Copy `.env.production` to `.env` and fill in your credentials:
-
-```bash
-cp .env.production .env
-```
+Create `~/.cloudcli/.env` with your credentials:
 
 ```env
-# Supabase (user database)
+# Cloud Storage (Backblaze B2)
+BACKBLAZE_ACCESS_KEY=your-key-id
+BACKBLAZE_SECRET_KEY=your-secret-key
+BACKBLAZE_BUCKET=your-bucket-name
+BACKBLAZE_REGION=us-east-005
+BACKBLAZE_ENDPOINT=https://s3.us-east-005.backblazeb2.com
+
+# User Database (Supabase/PostgreSQL)
 DATABASE_URL=jdbc:postgresql://db.xxx.supabase.co:5432/postgres?sslmode=require
 DATABASE_USERNAME=postgres
 DATABASE_PASSWORD=your-password
 
-# Backblaze B2 (backup storage)
-BACKBLAZE_ACCESS_KEY=your-key-id
-BACKBLAZE_SECRET_KEY=your-secret-key
-
-# Email notifications
+# Email Notifications (Gmail)
 EMAIL_ENABLED=true
 EMAIL_USERNAME=your@gmail.com
-EMAIL_PASSWORD=your-app-password
+EMAIL_PASSWORD=your-gmail-app-password
+EMAIL_FROM=your@gmail.com
 EMAIL_TO=your@gmail.com
 ```
+
+> **Gmail App Password:** Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) to generate one.
 
 ---
 
 ## 🏗️ Build from Source
 
 ```bash
-# Clone
-git clone https://github.com/saqlainansari/cloudcli.git
-cd cloudcli
+# Clone the repository
+git clone https://github.com/Mysterious786/CloudCLI.git
+cd CloudCLI
 
 # Build
 ./mvnw clean package -DskipTests
@@ -159,12 +183,32 @@ java -jar target/cloudcli-0.0.1-SNAPSHOT.jar
 
 ---
 
+## 🏛️ Architecture
+
+Built with:
+- **Java 17** + **Spring Boot 3.3.5**
+- **Picocli 4.7.5** — CLI framework
+- **JLine 3** — Interactive shell with TAB completion
+- **Lanterna 3** — Full-screen TUI
+- **Hibernate JPA** — Database ORM
+- **AWS SDK v2** — S3-compatible storage
+- **JavaMail** — HTML email notifications
+
+Design Patterns used:
+- Strategy (backup strategies per DB type)
+- Factory (storage provider selection)
+- Repository (data access layer)
+- Observer (notification system)
+- Facade (backup orchestration)
+
+---
+
 ## 👨‍💻 Author
 
 **Saqlain Zarjis Ansari**
 
-- 📞 Phone: +91 8442883695
-- 📧 Email: saqlainzarjisansari@gmail.com
+- 📞 Phone: [+91 8442883695](tel:+918442883695)
+- 📧 Email: [saqlainzarjisansari@gmail.com](mailto:saqlainzarjisansari@gmail.com)
 - 💼 LinkedIn: [linkedin.com/in/saqlain-zarjis-ansari-108b2621b](https://www.linkedin.com/in/saqlain-zarjis-ansari-108b2621b/)
 
 ---
@@ -172,3 +216,12 @@ java -jar target/cloudcli-0.0.1-SNAPSHOT.jar
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) file for details.
+
+---
+
+## 🔗 Links
+
+- **GitHub:** https://github.com/Mysterious786/CloudCLI
+- **Releases:** https://github.com/Mysterious786/CloudCLI/releases/latest
+- **npm:** https://www.npmjs.com/package/@saqlain8442/cloudcli
+- **Install Script:** https://raw.githubusercontent.com/Mysterious786/CloudCLI/main/install.sh
