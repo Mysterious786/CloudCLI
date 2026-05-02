@@ -50,10 +50,23 @@ public class SchemaExtractorService {
     private String extractPostgresSchema(DatabaseConfig config) {
         validateConfig(config, false);
 
+        // For Supabase pooler URLs, switch to direct connection port 5432 on direct host
+        // Supabase pooler (port 6543) doesn't support pg_dump - use direct connection
+        String host = config.getHost();
+        int port = config.getPort() > 0 ? config.getPort() : 5432;
+
+        // Detect Supabase pooler and switch to direct connection
+        if (host.contains("pooler.supabase.com")) {
+            // Convert pooler host to direct host
+            // aws-1-ap-northeast-2.pooler.supabase.com → db.<project>.supabase.co
+            log.warn("Supabase pooler detected - switching to JDBC for schema extraction");
+            return extractPostgresSchemaViaJdbc(config);
+        }
+
         List<String> cmd = new ArrayList<>();
         cmd.add(pgDumpPath);
-        cmd.add("-h"); cmd.add(config.getHost());
-        cmd.add("-p"); cmd.add(String.valueOf(config.getPort() > 0 ? config.getPort() : 5432));
+        cmd.add("-h"); cmd.add(host);
+        cmd.add("-p"); cmd.add(String.valueOf(port));
         cmd.add("-U"); cmd.add(config.getUsername());
         cmd.add("-d"); cmd.add(config.getDatabase());
         cmd.add("--schema-only");
@@ -62,6 +75,112 @@ public class SchemaExtractorService {
         cmd.add("--no-comments");
 
         return runCommand(cmd, config.getPassword(), "PostgreSQL schema extraction");
+    }
+
+    /**
+     * Extract PostgreSQL schema via JDBC (works with Supabase pooler)
+     */
+    private String extractPostgresSchemaViaJdbc(DatabaseConfig config) {
+        String url = String.format("jdbc:postgresql://%s:%d/%s?sslmode=require",
+            config.getHost(),
+            config.getPort() > 0 ? config.getPort() : 5432,
+            config.getDatabase());
+
+        StringBuilder schema = new StringBuilder();
+        schema.append("-- PostgreSQL Schema for: ").append(config.getDatabase()).append("\n");
+        schema.append("-- Extracted via JDBC (Supabase compatible)\n\n");
+
+        try (Connection conn = DriverManager.getConnection(url, config.getUsername(), config.getPassword());
+             Statement stmt = conn.createStatement()) {
+
+            // Get all tables
+            ResultSet tables = stmt.executeQuery(
+                "SELECT table_name FROM information_schema.tables " +
+                "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' " +
+                "ORDER BY table_name"
+            );
+
+            List<String> tableNames = new ArrayList<>();
+            while (tables.next()) {
+                tableNames.add(tables.getString("table_name"));
+            }
+
+            // For each table, get column definitions
+            for (String tableName : tableNames) {
+                schema.append("-- Table: ").append(tableName).append("\n");
+                schema.append("CREATE TABLE ").append(tableName).append(" (\n");
+
+                PreparedStatement colStmt = conn.prepareStatement(
+                    "SELECT column_name, data_type, is_nullable, column_default, character_maximum_length " +
+                    "FROM information_schema.columns " +
+                    "WHERE table_schema = 'public' AND table_name = ? " +
+                    "ORDER BY ordinal_position"
+                );
+                colStmt.setString(1, tableName);
+                ResultSet cols = colStmt.executeQuery();
+
+                List<String> colDefs = new ArrayList<>();
+                while (cols.next()) {
+                    String colName = cols.getString("column_name");
+                    String dataType = cols.getString("data_type");
+                    String nullable = cols.getString("is_nullable");
+                    String defaultVal = cols.getString("column_default");
+                    Integer maxLen = (Integer) cols.getObject("character_maximum_length");
+
+                    StringBuilder colDef = new StringBuilder("    ");
+                    colDef.append(colName).append(" ").append(dataType.toUpperCase());
+                    if (maxLen != null) colDef.append("(").append(maxLen).append(")");
+                    if ("NO".equals(nullable)) colDef.append(" NOT NULL");
+                    if (defaultVal != null) colDef.append(" DEFAULT ").append(defaultVal);
+                    colDefs.add(colDef.toString());
+                }
+
+                schema.append(String.join(",\n", colDefs));
+                schema.append("\n);\n\n");
+
+                // Get indexes
+                PreparedStatement idxStmt = conn.prepareStatement(
+                    "SELECT indexname, indexdef FROM pg_indexes " +
+                    "WHERE schemaname = 'public' AND tablename = ?"
+                );
+                idxStmt.setString(1, tableName);
+                ResultSet indexes = idxStmt.executeQuery();
+                while (indexes.next()) {
+                    schema.append(indexes.getString("indexdef")).append(";\n");
+                }
+                schema.append("\n");
+            }
+
+            // Get foreign keys
+            schema.append("-- Foreign Key Constraints\n");
+            ResultSet fks = stmt.executeQuery(
+                "SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, " +
+                "ccu.column_name AS foreign_column_name, tc.constraint_name " +
+                "FROM information_schema.table_constraints AS tc " +
+                "JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name " +
+                "JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name " +
+                "WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'"
+            );
+            while (fks.next()) {
+                schema.append(String.format(
+                    "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s);\n",
+                    fks.getString("table_name"),
+                    fks.getString("constraint_name"),
+                    fks.getString("column_name"),
+                    fks.getString("foreign_table_name"),
+                    fks.getString("foreign_column_name")
+                ));
+            }
+
+            if (tableNames.isEmpty()) {
+                schema.append("-- No tables found in public schema\n");
+            }
+
+            return schema.toString();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("PostgreSQL schema extraction via JDBC failed: " + e.getMessage(), e);
+        }
     }
 
     // ── MySQL ─────────────────────────────────────────────────────────────────

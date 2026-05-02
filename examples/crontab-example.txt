@@ -1,0 +1,59 @@
+# CloudCLI Crontab Examples
+# Add these to your crontab with: crontab -e
+
+# ============================================
+# Daily Backups
+# ============================================
+
+# Daily MySQL backup at 2 AM
+0 2 * * * /path/to/cloudcli/examples/backup-mysql.sh production_db >> /var/log/cloudcli-mysql.log 2>&1
+
+# Daily PostgreSQL backup at 3 AM
+0 3 * * * cd /path/to/cloudcli && ./cloudcli backup --type postgres --host localhost --database mydb --username postgres --password $POSTGRES_PASSWORD --backup-type FULL >> /var/log/cloudcli-postgres.log 2>&1
+
+# Daily MongoDB backup at 4 AM
+0 4 * * * cd /path/to/cloudcli && ./cloudcli backup --type mongodb --host localhost --database mydb --username admin --password $MONGO_PASSWORD --backup-type FULL >> /var/log/cloudcli-mongo.log 2>&1
+
+# ============================================
+# Weekly Backups
+# ============================================
+
+# Weekly full backup on Sunday at 1 AM
+0 1 * * 0 /path/to/cloudcli/examples/backup-all-databases.sh >> /var/log/cloudcli-weekly.log 2>&1
+
+# ============================================
+# Hourly Backups (for critical databases)
+# ============================================
+
+# Hourly backup during business hours (9 AM - 6 PM, Mon-Fri)
+0 9-18 * * 1-5 cd /path/to/cloudcli && ./cloudcli backup --type mysql --host localhost --database critical_db --username backup_user --password $MYSQL_PASSWORD --backup-type FULL >> /var/log/cloudcli-hourly.log 2>&1
+
+# ============================================
+# Monthly Backups
+# ============================================
+
+# Monthly backup on the 1st at midnight
+0 0 1 * * /path/to/cloudcli/examples/backup-all-databases.sh >> /var/log/cloudcli-monthly.log 2>&1
+
+# ============================================
+# Cleanup Old Backups
+# ============================================
+
+# Delete backups older than 30 days (daily at 5 AM)
+0 5 * * * find /path/to/cloudcli/backups -name "*.gz" -mtime +30 -delete
+
+# ============================================
+# Notes
+# ============================================
+# Cron format: minute hour day month day-of-week command
+# 
+# Examples:
+# 0 2 * * *     - Every day at 2:00 AM
+# 0 */6 * * *   - Every 6 hours
+# 0 0 * * 0     - Every Sunday at midnight
+# 0 0 1 * *     - First day of every month at midnight
+# */30 * * * *  - Every 30 minutes
+#
+# Environment variables:
+# - Load from file: source /path/to/.env
+# - Or set in crontab: MYSQL_PASSWORD=secret
