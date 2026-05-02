@@ -1,0 +1,46 @@
+{
+  "name": "cloudcli",
+  "version": "1.0.0",
+  "description": "Multi-Database Backup CLI Tool - Backup MySQL, PostgreSQL, MongoDB, SQLite & Supabase to the cloud",
+  "keywords": [
+    "backup",
+    "database",
+    "cli",
+    "mysql",
+    "postgresql",
+    "mongodb",
+    "sqlite",
+    "supabase",
+    "cloud",
+    "backblaze",
+    "s3"
+  ],
+  "author": {
+    "name": "Saqlain Zarjis Ansari",
+    "email": "saqlainzarjisansari@gmail.com",
+    "url": "https://www.linkedin.com/in/saqlain-zarjis-ansari-108b2621b/"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/saqlainansari/cloudcli",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saqlainansari/cloudcli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saqlainansari/cloudcli/issues"
+  },
+  "bin": {
+    "cloudcli": "./bin/cloudcli.js"
+  },
+  "scripts": {
+    "postinstall": "node bin/install.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ]
+}

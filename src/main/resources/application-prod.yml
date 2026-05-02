@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: cloudcli
+  main:
+    web-application-type: none
+    banner-mode: off
+  
+  # PostgreSQL/Supabase Database Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cloudcli}
+    driver-class-name: org.postgresql.Driver
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # JPA Configuration for PostgreSQL
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # Creates/updates tables automatically
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+# Backup Configuration (same as dev)
+backup:
+  temp-dir: ${java.io.tmpdir}/cloudcli-backups
+  retention-days: 30
+  
+  tools:
+    mysql-dump: ${MYSQL_DUMP_PATH:mysqldump}
+    pg-dump: ${PG_DUMP_PATH:pg_dump}
+    mongo-dump: ${MONGO_DUMP_PATH:mongodump}
+    sqlite3: ${SQLITE3_PATH:sqlite3}
+  
+  storage:
+    default: backblaze
+    
+    local:
+      base-path: ./backups
+    
+    backblaze:
+      enabled: true
+      bucket: ${BACKBLAZE_BUCKET:cloudcli-backups}
+      region: ${BACKBLAZE_REGION:us-east-005}
+      access-key: ${BACKBLAZE_ACCESS_KEY:}
+      secret-key: ${BACKBLAZE_SECRET_KEY:}
+      endpoint: ${BACKBLAZE_ENDPOINT:https://s3.us-east-005.backblazeb2.com}
+  
+  notification:
+    enabled: true
+    providers: console
+
+# Logging for Production
+logging:
+  level:
+    root: WARN
+    com.example.cloudcli: INFO
+    org.mongodb.driver: ERROR
+    com.mongodb: ERROR
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/cloudcli.log

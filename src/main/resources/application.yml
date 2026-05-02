@@ -1,0 +1,141 @@
+spring:
+  application:
+    name: cloudcli
+  main:
+    web-application-type: none  # Disable web server for CLI app
+    banner-mode: off
+  
+  # H2 Database Configuration (file-based for persistence)
+  datasource:
+    url: jdbc:h2:file:./data/cloudcli;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # JPA Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update  # Creates/updates tables automatically
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  
+  # H2 Console (optional, for debugging)
+  h2:
+    console:
+      enabled: false  # Set to true if you want to access H2 console
+
+# Backup Configuration
+backup:
+  temp-dir: ${java.io.tmpdir}/cloudcli-backups
+  retention-days: 30
+  
+  # Database Tool Paths (auto-detected if not specified)
+  tools:
+    mysql-dump: ${MYSQL_DUMP_PATH:mysqldump}
+    pg-dump: ${PG_DUMP_PATH:/opt/homebrew/opt/postgresql@17/bin/pg_dump}
+    mongo-dump: ${MONGO_DUMP_PATH:mongodump}
+    sqlite3: ${SQLITE3_PATH:sqlite3}
+  
+  # Storage Providers
+  storage:
+    default: backblaze  # Changed from local to backblaze
+    
+    local:
+      base-path: ./backups
+    
+    s3:
+      enabled: false
+      bucket: my-backup-bucket
+      region: us-east-1
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+      endpoint: # Leave empty for AWS S3
+    
+    # Backblaze B2 (S3-compatible, 10GB free)
+    backblaze:
+      enabled: true
+      bucket: ${BACKBLAZE_BUCKET:cloudcli-backups}
+      region: ${BACKBLAZE_REGION:us-east-005}
+      access-key: ${BACKBLAZE_ACCESS_KEY:}
+      secret-key: ${BACKBLAZE_SECRET_KEY:}
+      endpoint: ${BACKBLAZE_ENDPOINT:https://s3.us-east-005.backblazeb2.com}
+    
+    # Wasabi (S3-compatible, cheaper than AWS)
+    wasabi:
+      enabled: false
+      bucket: my-backup-bucket
+      region: us-east-1
+      access-key: ${WASABI_ACCESS_KEY:}
+      secret-key: ${WASABI_SECRET_KEY:}
+      endpoint: https://s3.us-east-1.wasabisys.com
+  
+  # Notification Configuration
+  notification:
+    enabled: true
+    providers: console,email  # Email notifications enabled!
+    
+    email:
+      enabled: ${EMAIL_ENABLED:false}
+      smtp-host: ${EMAIL_SMTP_HOST:smtp.gmail.com}
+      smtp-port: ${EMAIL_SMTP_PORT:587}
+      username: ${EMAIL_USERNAME:}
+      password: ${EMAIL_PASSWORD:}
+      from: ${EMAIL_FROM:}
+      to: ${EMAIL_TO:}
+      use-tls: ${EMAIL_USE_TLS:true}
+      html-enabled: ${EMAIL_HTML_ENABLED:true}
+    
+    slack:
+      enabled: false
+      webhook-url: ${SLACK_WEBHOOK_URL:}
+      channel: #backups
+      username: Backup Bot
+
+# Database Configurations (for testing/examples)
+databases:
+  mysql:
+    host: localhost
+    port: 3306
+    database: mydb
+    username: root
+    password: ${MYSQL_PASSWORD:}
+  
+  postgres:
+    host: localhost
+    port: 5432
+    database: mydb
+    username: postgres
+    password: ${POSTGRES_PASSWORD:}
+  
+  mongodb:
+    host: localhost
+    port: 27017
+    database: mydb
+    username: ${MONGO_USERNAME:}
+    password: ${MONGO_PASSWORD:}
+    auth-database: admin
+  
+  sqlite:
+    path: /path/to/database.db
+  
+  supabase:
+    host: db.xxxxxxxxxxxxx.supabase.co
+    port: 5432
+    database: postgres
+    username: postgres
+    password: ${SUPABASE_PASSWORD:}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.example.cloudcli: DEBUG
+    org.mongodb.driver: WARN  # Reduce MongoDB connection noise
+    com.mongodb: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/cloudcli.log

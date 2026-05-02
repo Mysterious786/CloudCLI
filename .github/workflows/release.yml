@@ -1,0 +1,84 @@
+name: Build & Release CloudCLI
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v1.2.3
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ── Checkout code ──────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Setup Java ─────────────────────────────────────────────────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ── Build JAR ──────────────────────────────────────────────────────────
+      - name: Build JAR
+        run: ./mvnw clean package -DskipTests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          BACKBLAZE_ACCESS_KEY: ${{ secrets.BACKBLAZE_ACCESS_KEY }}
+          BACKBLAZE_SECRET_KEY: ${{ secrets.BACKBLAZE_SECRET_KEY }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+
+      # ── Rename JAR ─────────────────────────────────────────────────────────
+      - name: Rename JAR
+        run: cp target/cloudcli-*.jar cloudcli.jar
+
+      # ── Get version from tag ───────────────────────────────────────────────
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      # ── Create GitHub Release ──────────────────────────────────────────────
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: "CloudCLI ${{ steps.version.outputs.VERSION }}"
+          body: |
+            ## ☁️ CloudCLI ${{ steps.version.outputs.VERSION }}
+            
+            Multi-Database Backup CLI Tool
+            
+            ### 🚀 Quick Install
+            
+            **macOS / Linux:**
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+            ```
+            
+            **Manual Download:**
+            Download `cloudcli.jar` below and run:
+            ```bash
+            java -jar cloudcli.jar
+            ```
+            
+            ### 📋 Requirements
+            - Java 17 or higher
+            
+            ### 🔧 What's New
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+            
+            ---
+            Developed by **Saqlain Zarjis Ansari**
+          files: |
+            cloudcli.jar
+            install.sh
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
